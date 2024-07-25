@@ -1,6 +1,9 @@
 import streamlit as st
 import openai
 import os
+import pandas as pd
+import datetime
+
 
 st.title('TIME TO STREET')
 
@@ -9,6 +12,24 @@ num_participants = st.sidebar.number_input('참여자 수', min_value=1, max_val
 # 요일 목록
 days_of_week = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일']
 
+# 호스트가 제외하고 싶은 시간대를 설정
+st.sidebar.subheader("호스트 제외 시간대 설정")
+exclude_time_checkbox = st.sidebar.checkbox('새벽 시간을 제외할 것인가요?')
+
+if exclude_time_checkbox:
+    time_options = [f'{hour:02d}:{minute:02d}' for hour in range(23, 24) for minute in range(0, 60, 5)] + \
+                   [f'{hour:02d}:{minute:02d}' for hour in range(0, 8) for minute in range(0, 60, 5)]
+    
+    exclude_start_time_str = st.sidebar.selectbox('새벽 시간 시작', options=time_options, index=0)
+    exclude_end_time_str = st.sidebar.selectbox('새벽 시간 끝', options=time_options, index=len(time_options) - 1)
+    
+    exclude_start_time = datetime.datetime.strptime(exclude_start_time_str, "%H:%M").time()
+    exclude_end_time = datetime.datetime.strptime(exclude_end_time_str, "%H:%M").time()
+else:
+    exclude_start_time = None
+    exclude_end_time = None
+    
+    
 # 참가자의 이름과 안 되는 요일, 시간을 이중 dict 형태로 저장
 participants = {}
 participant_names = []
@@ -75,8 +96,11 @@ openai.api_key = api_key
 if not api_key:
     raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
 
-def find_optimal_schedule(participants, required_participants, excluded_participants):
+def find_optimal_schedule(participants, required_participants, excluded_participants, exclude_start_time, exclude_end_time):
     prompt = "다음 참여자들의 불가능 시간을 고려하여 최적의 회의 시간을 추천해 주세요. 참여자들의 불가능 시간을 제외한 모든 시간을 제시해주면 됩니다.\n"
+    
+    # 호스트가 제외하고 싶은 시간대를 추가
+    prompt += f"모든 요일의 제외 시간대: {exclude_start_time.strftime('%H:%M')} - {exclude_end_time.strftime('%H:%M')}\n"
     
     # 필수 고려 대상 참가자의 정보를 추가
     if required_participants:
@@ -106,7 +130,7 @@ def find_optimal_schedule(participants, required_participants, excluded_particip
 
 if st.button('최적의 시간대 찾기'):
     st.write('최적의 시간대를 찾는 중입니다...')
-    best_times = find_optimal_schedule(participants, required_participants, excluded_participants)
+    best_times = find_optimal_schedule(participants, required_participants, excluded_participants, exclude_start_time, exclude_end_time)
     
     st.write('## 추천 시간대')
     for time in best_times:
