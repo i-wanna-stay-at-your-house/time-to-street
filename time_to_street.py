@@ -22,9 +22,18 @@ for i in range(num_participants):
     unavailable_days = sorted(unavailable_days, key=lambda day: days_of_week.index(day))
 
     for j, day in enumerate(unavailable_days):
-        st.sidebar.write(f"{name}의 {day} 불가능 시간 (예: 12:00-15:00, 17:00-21:00)")
-        times = st.sidebar.text_area(f'{day} 불가능 시간 입력', placeholder="12:00-15:00, 17:00-21:00", key=f'times_{i}_{j}')
-        unavailability[day] = times    
+        col1, col2 = st.sidebar.columns([3, 1])
+        with col1:
+            st.sidebar.write(f"{name}의 {day} 불가능 시간 (예: 12:00-15:00, 17:00-21:00)")
+        with col2:
+            all_day_unavailable = st.sidebar.checkbox('모든 시간 불가능', key=f'all_day_{i}_{j}')
+        
+        if all_day_unavailable:
+            unavailability[day] = "모든 시간 불가능"
+            st.sidebar.write(f"{day} 모든 시간 불가능")
+        else:
+            times = st.sidebar.text_area(f'{day} 불가능 시간 입력', placeholder="12:00-15:00, 17:00-21:00", key=f'times_{i}_{j}')
+            unavailability[day] = times      
         
     participants[name] = unavailability
 
