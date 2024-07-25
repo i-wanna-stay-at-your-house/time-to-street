@@ -76,7 +76,7 @@ if not api_key:
     raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.")
 
 def find_optimal_schedule(participants, required_participants, excluded_participants):
-    prompt = "다음 참여자들의 불가능 시간을 고려하여 최적의 회의 시간을 추천해 주세요. 최적의 요일과 시간을 3가지 정도로 추려서 알려주면 됩니다. 따로 요청사항이 없다면 2시간 단위로 시간을 나누면 됩니다.\n"
+    prompt = "다음 참여자들의 불가능 시간을 고려하여 최적의 회의 시간을 추천해 주세요. 참여자들의 불가능 시간을 제외한 모든 시간을 제시해주면 됩니다.\n"
     
     # 필수 고려 대상 참가자의 정보를 추가
     if required_participants:
